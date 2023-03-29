@@ -16,8 +16,15 @@
 
 [Fast Planner——代码解读参考资料整理](https://blog.csdn.net/tugepaopaoo/article/details/128242192)
 
+[三、考虑机器人动力学约束下的路径寻找](https://zhuanlan.zhihu.com/p/414234771)
+
 ### 前端讲解
 [混合A*算法研究](https://blog.csdn.net/robinvista/article/details/106279968):主要解决共占栅格问题
 
 ### 后端轨迹优化
 [Fast Planner后端：B样条](https://www.bilibili.com/video/BV1zG411G7Pe/?spm_id_from=333.337.search-card.all.click)
+
+[【路径规划】局部路径规划算法——B样条曲线法（含python实现 | c++实现）](https://blog.csdn.net/weixin_42301220/article/details/125173884)
+
+### C++遇到相关的问题解决
+[C++内存对齐](https://zhuanlan.zhihu.com/p/600487301)
