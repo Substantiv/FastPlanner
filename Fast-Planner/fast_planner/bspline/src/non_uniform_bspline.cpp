@@ -21,8 +21,6 @@
 * along with Fast-Planner. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #include "bspline/non_uniform_bspline.h"
 #include <ros/ros.h>
 
@@ -35,23 +33,32 @@ NonUniformBspline::NonUniformBspline(const Eigen::MatrixXd& points, const int& o
 
 NonUniformBspline::~NonUniformBspline() {}
 
+/*
+*@berif: 均匀B样条设置
+*        获得控制点，轨迹次数，以及时间间隔的情况下，设置时间区间(Knot vector)
+*@param points:   控制点
+*@param order:    轨迹次数
+*@param interval: 时间间隔
+*@return: void
+*/
 void NonUniformBspline::setUniformBspline(const Eigen::MatrixXd& points, const int& order,
                                           const double& interval) {
-  control_points_ = points;
-  p_              = order;
-  interval_       = interval;
+  control_points_ = points;         // 控制点
+  p_              = order;          // B-spline次数
+  interval_       = interval;       // 时间间隔
 
-  n_ = points.rows() - 1;
-  m_ = n_ + p_ + 1;
+  n_ = points.rows() - 1;           // 轨迹段数
+  m_ = n_ + p_ + 1;                 // 涉及的节点数()
 
-  u_ = Eigen::VectorXd::Zero(m_ + 1);
+  /* ---------------  生成节点向量 --------------- */
+  u_ = Eigen::VectorXd::Zero(m_ + 1);         // 定义节点向量(knot vector)
   for (int i = 0; i <= m_; ++i) {
 
-    if (i <= p_) {
+    if (i <= p_) {                            // 前p+1个节点, 好像没什么用? 只要保证up = 0即可
       u_(i) = double(-p_ + i) * interval_;
-    } else if (i > p_ && i <= m_ - p_) {
+    } else if (i > p_ && i <= m_ - p_) {      // 中间n-p个节点, up+1 = ts , up+2 = 2 * ts
       u_(i) = u_(i - 1) + interval_;
-    } else if (i > m_ - p_) {
+    } else if (i > m_ - p_) {                 // 后p+1个节点
       u_(i) = u_(i - 1) + interval_;
     }
   }
@@ -74,6 +81,12 @@ pair<Eigen::VectorXd, Eigen::VectorXd> NonUniformBspline::getHeadTailPts() {
   return make_pair(head, tail);
 }
 
+/*
+*@berif: B样条函数值计算
+*        直接得到一个[t_{p} , t_{m−p}]作用域中的B样条函数值
+*@param u: 时间间隔
+*@return: void
+*/
 Eigen::VectorXd NonUniformBspline::evaluateDeBoor(const double& u) {
 
   double ub = min(max(u_(p_), u), u_(m_ - p_));
@@ -332,6 +345,9 @@ void NonUniformBspline::lengthenTime(const double& ratio) {
 
 void NonUniformBspline::recomputeInit() {}
 
+/*
+*@berif: 通过对前端hybrid A*寻找到的初始路径进行拟合得到的
+*/
 void NonUniformBspline::parameterizeToBspline(const double& ts, const vector<Eigen::Vector3d>& point_set,
                                               const vector<Eigen::Vector3d>& start_end_derivative,
                                               Eigen::MatrixXd&               ctrl_pts) {
@@ -363,7 +379,6 @@ void NonUniformBspline::parameterizeToBspline(const double& ts, const vector<Eig
 
   A.block(K, 0, 1, 3)         = (1 / 2.0 / ts) * vrow.transpose();
   A.block(K + 1, K - 1, 1, 3) = (1 / 2.0 / ts) * vrow.transpose();
-
   A.block(K + 2, 0, 1, 3)     = (1 / ts / ts) * arow.transpose();
   A.block(K + 3, K - 1, 1, 3) = (1 / ts / ts) * arow.transpose();
   // cout << "A:\n" << A << endl;

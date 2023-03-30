@@ -56,7 +56,7 @@ public:
   NonUniformBspline(const Eigen::MatrixXd& points, const int& order, const double& interval);
   ~NonUniformBspline();
 
-  // initialize as an uniform B-spline
+  // initialize as an uniform B-spline 使用标准B样条进行初始化
   void setUniformBspline(const Eigen::MatrixXd& points, const int& order, const double& interval);
 
   // get / set basic bspline info

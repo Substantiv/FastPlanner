@@ -5,6 +5,9 @@
         "iostream": "cpp",
         "xutility": "cpp",
         "iosfwd": "cpp",
-        "xhash": "cpp"
+        "xhash": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "xstring": "cpp"
     }
 }
