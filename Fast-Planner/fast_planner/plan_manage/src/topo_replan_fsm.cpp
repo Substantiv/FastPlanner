@@ -35,10 +35,10 @@ void TopoReplanFSM::init(ros::NodeHandle& nh) {
   collide_     = false;
 
   /*  fsm param  */
-  nh.param("fsm/flight_type", target_type_, -1);
-  nh.param("fsm/thresh_replan", replan_time_threshold_, -1.0);
-  nh.param("fsm/thresh_no_replan", replan_distance_threshold_, -1.0);
-  nh.param("fsm/waypoint_num", waypoint_num_, -1);
+  nh.param("fsm/flight_type", target_type_, -1);                                // 飞行模式，手动还是自动加载goal  
+  nh.param("fsm/thresh_replan", replan_time_threshold_, -1.0);                  // 无人机单次规划起点距离限制
+  nh.param("fsm/thresh_no_replan", replan_distance_threshold_, -1.0);           // 重规划终点限制
+  nh.param("fsm/waypoint_num", waypoint_num_, -1);                              // 
   nh.param("fsm/act_map", act_map_, false);
   for (int i = 0; i < waypoint_num_; i++) {
     nh.param("fsm/waypoint" + to_string(i) + "_x", waypoints_[i][0], -1.0);

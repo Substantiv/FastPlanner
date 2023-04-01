@@ -45,7 +45,8 @@ KinodynamicAstar::~KinodynamicAstar()
 }
 
 /*
-*@berif:路径搜索
+*@berif:路径搜索在已知地图的前提下，给定起点和终点状态(位置和速度)实现混合A搜索
+*       如果搜索成功返回一系列path_nodes_节点
 *@param start_pt:     起始点的位置
 *@param start_v:      起始点的速度
 *@param start_a:      起始点的加速度
@@ -379,17 +380,17 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
 */
 void KinodynamicAstar::setParam(ros::NodeHandle& nh)
 {
-  nh.param("search/max_tau", max_tau_, -1.0);                                 
+  nh.param("search/max_tau", max_tau_, -1.0);                    // 如果考虑对时间维度进行划分才设置，这里未设置             
   nh.param("search/init_max_tau", init_max_tau_, -1.0);
-  nh.param("search/max_vel", max_vel_, -1.0);
-  nh.param("search/max_acc", max_acc_, -1.0);
+  nh.param("search/max_vel", max_vel_, -1.0);                    // 速度限制
+  nh.param("search/max_acc", max_acc_, -1.0);                    // 加速度限制
   nh.param("search/w_time", w_time_, -1.0);
-  nh.param("search/horizon", horizon_, -1.0);
-  nh.param("search/resolution_astar", resolution_, -1.0);
-  nh.param("search/time_resolution", time_resolution_, -1.0);
-  nh.param("search/lambda_heu", lambda_heu_, -1.0);
-  nh.param("search/allocate_num", allocate_num_, -1);
-  nh.param("search/check_num", check_num_, -1);
+  nh.param("search/horizon", horizon_, -1.0);                    // 限制全局规划的距离，保证实时性
+  nh.param("search/resolution_astar", resolution_, -1.0);        // 空间分辨率
+  nh.param("search/time_resolution", time_resolution_, -1.0);    // 时间维度分辨率
+  nh.param("search/lambda_heu", lambda_heu_, -1.0);              // 启发函数权重
+  nh.param("search/allocate_num", allocate_num_, -1);            // 最大节点数目
+  nh.param("search/check_num", check_num_, -1);                  // 对中间状态安全检查
   nh.param("search/optimistic", optimistic_, true);
   tie_breaker_ = 1.0 + 1.0 / 10000;
 

@@ -33,23 +33,22 @@
 using namespace std;
 
 namespace fast_planner {
-// An implementation of non-uniform B-spline with different dimensions
-// It also represents uniform B-spline which is a special case of non-uniform
+
+/*
+ *@berif:不同维度的非均匀b样条的实现.由于均匀B样条是非均匀B样条的特殊情况,所以也可以表示均匀B样条
+ */
 class NonUniformBspline {
 private:
-  // control points for B-spline with different dimensions.
-  // Each row represents one single control point
-  // The dimension is determined by column number
-  // e.g. B-spline with N points in 3D space -> Nx3 matrix
+  // 不同维度B样条曲线的控制点,每一行表示一个控制点,每一列表示一个维度(在三维空间的N个控制点Nx3)
   Eigen::MatrixXd control_points_;
 
-  int             p_, n_, m_;  // p degree, n+1 control points, m = n+p+1
-  Eigen::VectorXd u_;          // knots vector
-  double          interval_;   // knot span \delta t
+  int             p_, n_, m_;  // p 阶数, n+1 控制点, m = n+p+1
+  Eigen::VectorXd u_;          // 节点向量
+  double          interval_;   // 节点间隔 \delta t
 
   Eigen::MatrixXd getDerivativeControlPoints();
 
-  double limit_vel_, limit_acc_, limit_ratio_;  // physical limits and time adjustment ratio
+  double limit_vel_, limit_acc_, limit_ratio_;  // 速度限制、加速度限制和时间调整比例限制
 
 public:
   NonUniformBspline() {}

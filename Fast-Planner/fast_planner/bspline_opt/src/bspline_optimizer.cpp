@@ -41,7 +41,7 @@ const int BsplineOptimizer::NORMAL_PHASE =
     BsplineOptimizer::SMOOTHNESS | BsplineOptimizer::DISTANCE | BsplineOptimizer::FEASIBILITY;
 
 void BsplineOptimizer::setParam(ros::NodeHandle& nh) {
-  nh.param("optimization/lambda1", lambda1_, -1.0);
+  nh.param("optimization/lambda1", lambda1_, -1.0);       // 优化时加权参数
   nh.param("optimization/lambda2", lambda2_, -1.0);
   nh.param("optimization/lambda3", lambda3_, -1.0);
   nh.param("optimization/lambda4", lambda4_, -1.0);
@@ -66,7 +66,7 @@ void BsplineOptimizer::setParam(ros::NodeHandle& nh) {
   nh.param("optimization/max_iteration_time3", max_iteration_time_[2], -1.0);
   nh.param("optimization/max_iteration_time4", max_iteration_time_[3], -1.0);
 
-  nh.param("optimization/algorithm1", algorithm1_, -1);
+  nh.param("optimization/algorithm1", algorithm1_, -1);         // 最好的算法 40: SLSQP, 11:LBFGS
   nh.param("optimization/algorithm2", algorithm2_, -1);
   nh.param("optimization/order", order_, -1);
 }

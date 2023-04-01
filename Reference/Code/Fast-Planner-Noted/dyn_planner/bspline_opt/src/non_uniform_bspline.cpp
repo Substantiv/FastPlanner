@@ -143,6 +143,11 @@ NonUniformBspline NonUniformBspline::getDerivative()
     return derivative;
 }
 
+/*
+ *@berif:可达性检查
+ *param show:
+ *return:
+ */
 bool NonUniformBspline::checkFeasibility(bool show)
 {
     bool fea = true;
