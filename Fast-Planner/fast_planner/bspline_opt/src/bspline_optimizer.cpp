@@ -40,6 +40,11 @@ const int BsplineOptimizer::GUIDE_PHASE = BsplineOptimizer::SMOOTHNESS | Bspline
 const int BsplineOptimizer::NORMAL_PHASE =
     BsplineOptimizer::SMOOTHNESS | BsplineOptimizer::DISTANCE | BsplineOptimizer::FEASIBILITY;
 
+/*
+*@beief: 设置参数
+*@param: void
+*return: void
+*/
 void BsplineOptimizer::setParam(ros::NodeHandle& nh) {
   nh.param("optimization/lambda1", lambda1_, -1.0);       // 优化时加权参数
   nh.param("optimization/lambda2", lambda2_, -1.0);
@@ -110,20 +115,36 @@ void BsplineOptimizer::setWaypoints(const vector<Eigen::Vector3d>& waypts,
   waypt_idx_ = waypt_idx;
 }
 
+/*
+*@beief:将优化的控制点,均匀B样条的时间间隔,cost Function包含的优化项,
+以及终止条件（最大优化次数及最长优化时间）都设置好以后，就利用BsplineOptimizer的optimize()函数进行优化。
+*@param point:待优化的控制点
+*@param ts:均匀B样条的时间间隔
+*@param cost_function:代价函数
+*@param max_num_id:最大优化次数
+*@param max_time_id:最长优化时间
+*return:
+*/
 Eigen::MatrixXd BsplineOptimizer::BsplineOptimizeTraj(const Eigen::MatrixXd& points, const double& ts,
                                                       const int& cost_function, int max_num_id,
                                                       int max_time_id) {
-  setControlPoints(points);
-  setBsplineInterval(ts);
-  setCostFunction(cost_function);
-  setTerminateCond(max_num_id, max_time_id);
+  setControlPoints(points);                     // 设置优化的控制点
+  setBsplineInterval(ts);                       // 设置均匀B样条的时间间隔
+  setCostFunction(cost_function);               // cost Function包含的优化项
+  setTerminateCond(max_num_id, max_time_id);    // 设置终止条件(最大优化次数及最长优化时间)
 
-  optimize();
+  optimize();                                   // 进行优化
   return this->control_points_;
 }
 
+/*
+*@berif:进行优化求解
+*@param:  void
+*@return: void
+*/
 void BsplineOptimizer::optimize() {
-  /* initialize solver */
+  /* 初始化求解器 */
+  // 根据pt_num确定各部分优化项梯度vector的大小
   iter_num_        = 0;
   min_cost_        = std::numeric_limits<double>::max();
   const int pt_num = control_points_.rows();
@@ -135,23 +156,30 @@ void BsplineOptimizer::optimize() {
   g_waypoints_.resize(pt_num);
   g_guide_.resize(pt_num);
 
+  // 根据是否有终值点约束确定优化变量的个数
   if (cost_function_ & ENDPOINT) {
-    variable_num_ = dim_ * (pt_num - order_);
+    variable_num_ = dim_ * (pt_num - order_);       // 优化变量的个数
     // end position used for hard constraint
     end_pt_ = (1 / 6.0) *
         (control_points_.row(pt_num - 3) + 4 * control_points_.row(pt_num - 2) +
          control_points_.row(pt_num - 1));
   } else {
-    variable_num_ = max(0, dim_ * (pt_num - 2 * order_)) ;
+    variable_num_ = max(0, dim_ * (pt_num - 2 * order_)) ;    // 优化变量的个数
   }
 
   /* do optimization using NLopt slover */
+  // 实例化Nlopt::opt类对象 opt
   nlopt::opt opt(nlopt::algorithm(isQuadratic() ? algorithm1_ : algorithm2_), variable_num_);
+  // 设定目标函数。
   opt.set_min_objective(BsplineOptimizer::costFunction, this);
+  // 设定最大优化次数
   opt.set_maxeval(max_iteration_num_[max_num_id_]);
+  // 设定最长优化时间，
   opt.set_maxtime(max_iteration_time_[max_time_id_]);
+  // 设定目标函数的最小值 
   opt.set_xtol_rel(1e-5);
 
+  // 根据线性拟合得到的控制点设置优化变量的初值
   vector<double> q(variable_num_);
   for (int i = order_; i < pt_num; ++i) {
     if (!(cost_function_ & ENDPOINT) && i >= pt_num - order_) continue;
@@ -160,6 +188,7 @@ void BsplineOptimizer::optimize() {
     }
   }
 
+  // 设置每个优化变量的上下界（初始值±10）
   if (dim_ != 1) {
     vector<double> lb(variable_num_), ub(variable_num_);
     const double   bound = 10.0;
@@ -171,6 +200,7 @@ void BsplineOptimizer::optimize() {
     opt.set_upper_bounds(ub);
   }
 
+  // 利用Nlopt::opt类对行opt的optimize函数进行迭代优化求解
   try {
     // cout << fixed << setprecision(7);
     // vec_time_.clear();
@@ -187,6 +217,7 @@ void BsplineOptimizer::optimize() {
     cout << e.what() << endl;
   }
 
+  // 在求解结束后，通过costFunction中保留的best_variable_对control_point_进行赋值
   for (int i = order_; i < control_points_.rows(); ++i) {
     if (!(cost_function_ & ENDPOINT) && i >= pt_num - order_) continue;
     for (int j = 0; j < dim_; j++) {
@@ -197,6 +228,9 @@ void BsplineOptimizer::optimize() {
   if (!(cost_function_ & GUIDE)) ROS_INFO_STREAM("iter num: " << iter_num_);
 }
 
+/*
+*@berif: 计算平滑代价
+*/
 void BsplineOptimizer::calcSmoothnessCost(const vector<Eigen::Vector3d>& q, double& cost,
                                           vector<Eigen::Vector3d>& gradient) {
   cost = 0.0;
@@ -217,6 +251,9 @@ void BsplineOptimizer::calcSmoothnessCost(const vector<Eigen::Vector3d>& q, doub
   }
 }
 
+/*
+*@berif: 计算距离代价
+*/
 void BsplineOptimizer::calcDistanceCost(const vector<Eigen::Vector3d>& q, double& cost,
                                         vector<Eigen::Vector3d>& gradient) {
   cost = 0.0;
@@ -239,6 +276,9 @@ void BsplineOptimizer::calcDistanceCost(const vector<Eigen::Vector3d>& q, double
   }
 }
 
+/*
+*@berif: 计算可达性代价
+*/
 void BsplineOptimizer::calcFeasibilityCost(const vector<Eigen::Vector3d>& q, double& cost,
                                            vector<Eigen::Vector3d>& gradient) {
   cost = 0.0;
@@ -288,6 +328,9 @@ void BsplineOptimizer::calcFeasibilityCost(const vector<Eigen::Vector3d>& q, dou
   }
 }
 
+/*
+*@berif: 计算终止点的代价
+*/
 void BsplineOptimizer::calcEndpointCost(const vector<Eigen::Vector3d>& q, double& cost,
                                         vector<Eigen::Vector3d>& gradient) {
   cost = 0.0;
@@ -308,6 +351,9 @@ void BsplineOptimizer::calcEndpointCost(const vector<Eigen::Vector3d>& q, double
   gradient[q.size() - 1] += 2 * dq * (1 / 6.0);
 }
 
+/*
+*@berif: 计算路径点的代价
+*/
 void BsplineOptimizer::calcWaypointsCost(const vector<Eigen::Vector3d>& q, double& cost,
                                          vector<Eigen::Vector3d>& gradient) {
   cost = 0.0;
@@ -352,12 +398,24 @@ void BsplineOptimizer::calcGuideCost(const vector<Eigen::Vector3d>& q, double& c
   }
 }
 
+/*
+*@berif:结合三种优化项的进行优化
+*@param x:          Nlopt优化的变量，应该与三个维度的控制点对应
+*@param grad:       总的优化项关于每个优化变量的梯度信息
+*@param f_combine:  结合后的Cost
+*return:            void
+*/
 void BsplineOptimizer::combineCost(const std::vector<double>& x, std::vector<double>& grad,
                                    double& f_combine) {
   /* convert the NLopt format vector to control points. */
 
   // This solver can support 1D-3D B-spline optimization, but we use Vector3d to store each control point
   // For 1D case, the second and third elements are zero, and similar for the 2D case.
+  // 给g_q赋值,g_q是用来计算每次优化循环三个优化项的控制点
+  // 值得注意的是，前p_b​个控制点和最后p_b​个控制点是不进行优化的,始终保持线性拟合得到控制点原值。
+  // 中间的控制点则是因为每一次迭代优化后都不同,因此用x来赋值。这里的x是通过Nlopt的opt对象在set_min_objective中进行初始化的，
+  // 具体的大小在构造 Nlopt optimizer对象时就通过variable_num的大小确定了。
+  // 而初始值则是在Nlopt求解时 .optimize函数中进行赋值。
   for (int i = 0; i < order_; i++) {
     for (int j = 0; j < dim_; ++j) {
       g_q_[i][j] = control_points_(i, j);
@@ -376,6 +434,7 @@ void BsplineOptimizer::combineCost(const std::vector<double>& x, std::vector<dou
     }
   }
 
+  // 
   if (!(cost_function_ & ENDPOINT)) {
     for (int i = 0; i < order_; i++) {
 
@@ -393,7 +452,12 @@ void BsplineOptimizer::combineCost(const std::vector<double>& x, std::vector<dou
   grad.resize(variable_num_);
   fill(grad.begin(), grad.end(), 0.0);
 
-  /*  evaluate costs and their gradient  */
+  /*  
+  evaluate costs and their gradient  
+  利用CalcSmoothneesCost, CalcDistanceCost, CalcFeasibilityCost, calcEndpointCost, calcGuideCost,
+  calcWaypointsCost 六个函数计算每一部分的cost和grad,并乘上权重后累加至grad和f_combine中,
+  唯一需要注意的是grad和各部分优化项梯度之间维度上差了两个B样条次数
+  */
   double f_smoothness, f_distance, f_feasibility, f_endpoint, f_guide, f_waypoints;
   f_smoothness = f_distance = f_feasibility = f_endpoint = f_guide = f_waypoints = 0.0;
 
@@ -433,26 +497,20 @@ void BsplineOptimizer::combineCost(const std::vector<double>& x, std::vector<dou
     for (int i = 0; i < variable_num_ / dim_; i++)
       for (int j = 0; j < dim_; j++) grad[dim_ * i + j] += lambda7_ * g_waypoints_[i + order_](j);
   }
-  /*  print cost  */
-  // if ((cost_function_ & WAYPOINTS) && iter_num_ % 10 == 0) {
-  //   cout << iter_num_ << ", total: " << f_combine << ", acc: " << lambda8_ * f_view
-  //        << ", waypt: " << lambda7_ * f_waypoints << endl;
-  // }
-
-  // if (optimization_phase_ == SECOND_PHASE) {
-  //  << ", smooth: " << lambda1_ * f_smoothness
-  //  << " , dist:" << lambda2_ * f_distance
-  //  << ", fea: " << lambda3_ * f_feasibility << endl;
-  // << ", end: " << lambda4_ * f_endpoint
-  // << ", guide: " << lambda5_ * f_guide
-  // }
 }
 
+/*
+*@berif:构建符合Nlopt要求的目标函数,通过combinecost返回总的cost，并在参数中提供梯度信息
+*@param x:          Nlopt优化的变量，应该与三个维度的控制点对应
+*@param grad:       总的优化项关于每个优化变量的梯度信息
+*@param func_data:  
+*@return:           总的cost
+*/
 double BsplineOptimizer::costFunction(const std::vector<double>& x, std::vector<double>& grad,
                                       void* func_data) {
   BsplineOptimizer* opt = reinterpret_cast<BsplineOptimizer*>(func_data);
   double            cost;
-  opt->combineCost(x, grad, cost);
+  opt->combineCost(x, grad, cost);        // 总的cost
   opt->iter_num_++;
 
   /* save the min cost result */
@@ -461,23 +519,6 @@ double BsplineOptimizer::costFunction(const std::vector<double>& x, std::vector<
     opt->best_variable_ = x;
   }
   return cost;
-
-  // /* evaluation */
-  // ros::Time te1 = ros::Time::now();
-  // double time_now = (te1 - opt->time_start_).toSec();
-  // opt->vec_time_.push_back(time_now);
-  // if (opt->vec_cost_.size() == 0)
-  // {
-  //   opt->vec_cost_.push_back(f_combine);
-  // }
-  // else if (opt->vec_cost_.back() > f_combine)
-  // {
-  //   opt->vec_cost_.push_back(f_combine);
-  // }
-  // else
-  // {
-  //   opt->vec_cost_.push_back(opt->vec_cost_.back());
-  // }
 }
 
 vector<Eigen::Vector3d> BsplineOptimizer::matrixToVectors(const Eigen::MatrixXd& ctrl_pts) {
