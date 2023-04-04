@@ -10,7 +10,7 @@ function y = autopilot(uu,P)
     h        = uu(3+NN);  % altitude
     Va       = uu(4+NN);  % airspeed
     alpha    = uu(5+NN);  % angle of attack
-    beta_air     = uu(6+NN);  % side slip angle
+    beta_air = uu(6+NN);  % side slip angle
     phi      = uu(7+NN);  % roll angle
     theta    = uu(8+NN);  % pitch angle
     chi      = uu(9+NN);  % course angle
@@ -27,7 +27,7 @@ function y = autopilot(uu,P)
     NN = NN+19;
     Va_c     = uu(1+NN);  % commanded airspeed (m/s)
     h_c      = uu(2+NN);  % commanded altitude (m)
-    chi_c    = uu(3+NN);  % commanded course (rad)
+    chi_c    = uu(3+NN);  % TODO:commanded course (rad)
     NN = NN+3;
     t        = uu(1+NN);   % time
     
@@ -41,7 +41,7 @@ function y = autopilot(uu,P)
         case 2,
            [delta, x_command] = autopilot_uavbook(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p,q,r,t,P);
         case 3,
-               [delta, x_command] = autopilot_TECS(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p,q,r,t,P);
+           [delta, x_command] = autopilot_TECS(Va_c,h_c,chi_c,Va,h,chi,phi,theta,p,q,r,t,P);
     end
     y = [delta; x_command];
 end

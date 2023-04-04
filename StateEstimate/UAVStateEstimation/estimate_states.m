@@ -10,7 +10,7 @@
 %   betahat  - estimated sideslip angle
 %   phihat   - estimated roll angle, 
 %   thetahat - estimated pitch angel, 
-%   chihat   - estimated course, 
+%   chihat   - estimated course angel, 
 %   phat     - estimated roll rate, 
 %   qhat     - estimated pitch rate, 
 %   rhat     - estimated yaw rate,
@@ -23,20 +23,20 @@
 function xhat = estimate_states(uu,P)
 
     % rename inputs
-    y_gyro_x      = uu(1);
-    y_gyro_y      = uu(2);
-    y_gyro_z      = uu(3);
-    y_accel_x     = uu(4);
-    y_accel_y     = uu(5);
-    y_accel_z     = uu(6);
-    y_static_pres = uu(7);
-    y_diff_pres   = uu(8);
-    y_gps_n       = uu(9);
-    y_gps_e       = uu(10);
-    y_gps_h       = uu(11);
-    y_gps_Vg      = uu(12);
-    y_gps_course  = uu(13);
-    t             = uu(14);
+    y_gyro_x      = uu(1);          % 陀螺仪测量x方向的角速度
+    y_gyro_y      = uu(2);          % 陀螺仪测量y方向的角速度
+    y_gyro_z      = uu(3);          % 陀螺仪测量z方向的角速度
+    y_accel_x     = uu(4);          % 加速度计测量x方向的加速度
+    y_accel_y     = uu(5);          % 加速度计测量y方向的加速度
+    y_accel_z     = uu(6);          % 加速度计测量z方向的加速度
+    y_static_pres = uu(7);          % 空速管测量的静压
+    y_diff_pres   = uu(8);          % 空速管测量的差压
+    y_gps_n       = uu(9);          % GPS测量的北位置
+    y_gps_e       = uu(10);         % GPS测量的东位置
+    y_gps_h       = uu(11);         % GPS测量的高度
+    y_gps_Vg      = uu(12);         % GPS测量的地面速度
+    y_gps_course  = uu(13);         % GPS测量的航向角
+    t             = uu(14);         % 时间
     
     % Altitude and Airspeed estimation ------------------------------------
     % LPF inverted sensor models
@@ -50,15 +50,15 @@ function xhat = estimate_states(uu,P)
        y_diff_pres_d1   = 0;
     end
    
-    % Estimate angular rates   
+    % Estimate angular rates
     lpf_static_pres = LPF(y_static_pres_d1,y_static_pres,P.alpha_static_pres);
     lpf_diff_pres   = LPF(y_diff_pres_d1,y_diff_pres,P.alpha_diff_pres);
 
-    hhat  = lpf_static_pres/(P.rho*P.gravity);
-    Vahat = sqrt(2*lpf_diff_pres/P.rho);
-    phat  = y_gyro_x;
-    qhat  = y_gyro_y;
-    rhat  = y_gyro_z;
+    hhat  = lpf_static_pres/(P.rho*P.gravity);      % 高度估计值
+    Vahat = sqrt(2*lpf_diff_pres/P.rho);            % 空速估计值
+    phat  = y_gyro_x;                               % roll角速度估计值
+    qhat  = y_gyro_y;                               % pitch角速度估计值
+    rhat  = y_gyro_z;                               % yaw角速度估计值
 
     % update old values
     y_static_pres_d1 = lpf_static_pres;
@@ -68,10 +68,10 @@ function xhat = estimate_states(uu,P)
     % EKF Attitude Estimation
     %----------------------------------------------------------------------
     % Initialize states and covariance matrices
-    persistent xhat_att;
-    persistent Q_att;
-    persistent P_att;
-    persistent R_att;
+    persistent xhat_att;        % 姿态状态量的估计值
+    persistent Q_att;           % 过程噪声的协方差
+    persistent P_att;           % 估计误差的协方差
+    persistent R_att;           % 测量噪声的协方差
     
     if t == 0
         xhat_att = [0, 0]';
@@ -103,10 +103,10 @@ function xhat = estimate_states(uu,P)
     % EKF GPS Estimation
     %----------------------------------------------------------------------
     % Initialize states and covariance matrices
-    persistent xhat_gps;
-    persistent P_gps;
-    persistent R_gps;
-    persistent Q_gps;
+    persistent xhat_gps;        % GPS状态量的估计值
+    persistent Q_gps;           % 过程噪声的协方差
+    persistent P_gps;           % 估计误差的协方差
+    persistent R_gps;           % 测量噪声的协方差
     
     if t == 0
         xhat_gps = [P.pn0; P.pe0; P.Va; P.psi0; 0; 0; P.psi0];

@@ -20,6 +20,7 @@ function plotMAVStateVariables(uu)
     wn          = uu(16);            % wind in the North direction
     we          = uu(17);            % wind in the East direction
     wd          = uu(18);            % wind in the Down direction
+    
     pn_c        = uu(19);            % commanded North position (meters)
     pe_c        = uu(20);            % commanded East position (meters)
     h_c         = uu(21);            % commanded altitude (meters)
@@ -32,6 +33,7 @@ function plotMAVStateVariables(uu)
     p_c         = 180/pi*uu(28);     % commanded body angular rate along x-axis (degrees/s)
     q_c         = 180/pi*uu(29);     % commanded body angular rate along y-axis (degrees/s)
     r_c         = 180/pi*uu(30);     % commanded body angular rate along z-axis (degrees/s)
+    
     pn_hat      = uu(31);            % estimated North position (meters)
     pe_hat      = uu(32);            % estimated East position (meters)
     h_hat       = uu(33);            % estimated altitude (meters)

@@ -1,8 +1,7 @@
 function xhat = true_states(uu,P)
 %
 % fake state estimation for mavsim
-%   - this function will be replaced with a state estimator in a later
-%   chapter.
+%   - this function will be replaced with a state estimator in a later chapter.
 %
 % Outputs are:
 %   pnhat    - estimated North position, 
@@ -13,7 +12,7 @@ function xhat = true_states(uu,P)
 %   betahat  - estimated sideslip angle
 %   phihat   - estimated roll angle, 
 %   thetahat - estimated pitch angel, 
-%   chihat   - estimated course, 
+%   chihat   - estimated course angel, 
 %   phat     - estimated roll rate, 
 %   qhat     - estimated pitch rate, 
 %   rhat     - estimated yaw rate,
