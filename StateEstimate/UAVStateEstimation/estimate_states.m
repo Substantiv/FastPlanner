@@ -80,6 +80,7 @@ function xhat = estimate_states(uu,P)
         R_att = 0.0025^2*eye(3);
     end
     
+    % 姿态估计的输入
     u_att = [phat, qhat, rhat, Vahat];
     y_att = [y_accel_x, y_accel_y, y_accel_z]';
     
@@ -94,9 +95,12 @@ function xhat = estimate_states(uu,P)
     % Measurement Correction
     if ~mod(t,P.Ts_gyros)
         C_att = dh_dx_att(xhat_att,u_att,P.gravity);
-        L_att = P_att*C_att'*inv(R_att + C_att*P_att*C_att');
-        P_att = (eye(2) - L_att*C_att)*P_att;
-        xhat_att = xhat_att + L_att*(y_att - h_att(xhat_att,u_att,P.gravity));
+        % 卡尔曼增益    
+        L_att = P_att*C_att'*inv(R_att + C_att*P_att*C_att');       
+        % 后验协方差
+        P_att = (eye(2) - L_att*C_att)*P_att;                       
+        % 后验状态估计
+        xhat_att = xhat_att + L_att*(y_att - h_att(xhat_att,u_att,P.gravity));      
     end
     
     %----------------------------------------------------------------------
