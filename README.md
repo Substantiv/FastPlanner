@@ -18,6 +18,8 @@
 
 [三、考虑机器人动力学约束下的路径寻找](https://zhuanlan.zhihu.com/p/414234771)
 
+[针对移动机器人的Lattice Planner -- 原理篇(剖析论文，详细学习了state lattice planner)](https://zhuanlan.zhihu.com/p/619039492?utm_campaign=shareopn&utm_medium=social&utm_oi=1128410832400416768&utm_psn=1626369330869899264&utm_source=wechat_session)
+
 ### 前端讲解
 [混合A*算法研究](https://blog.csdn.net/robinvista/article/details/106279968):主要解决共占栅格问题
 
